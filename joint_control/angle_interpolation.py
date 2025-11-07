@@ -21,7 +21,7 @@
 
 
 from pid import PIDAgent
-from keyframes import leftBellyToStand, rightBellyToStand, leftBackToStand, rightBackToStand, hello
+from keyframes import leftBellyToStand, rightBellyToStand, leftBackToStand, rightBackToStand, hello, wipe_forehead
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -33,7 +33,6 @@ class AngleInterpolationAgent(PIDAgent):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
         self.startTime = -1
-        self.startAngles = None
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
@@ -77,14 +76,11 @@ class AngleInterpolationAgent(PIDAgent):
                     break
                 minTime = maxTime
             
-            denom = (maxTime - minTime)
-            i = (curr_Time - minTime) / denom if denom > 1e-9 else 0.0
-            i = 0.0 if i < 0 else (1.0 if i > 1 else i) 
-
+            i = (curr_Time - minTime) / (maxTime - minTime)
             
             if (kframe == 0):
-                start_angle = self.startAngles.get(name, 0.0) if self.startAngles else 0.0
-                p0 = p1 = start_angle
+                p0 = 0
+                p1 = 0
                 p3 = keys[m][kframe][0]
                 p2 = p3 + keys[m][kframe][1][2]
 
@@ -98,15 +94,11 @@ class AngleInterpolationAgent(PIDAgent):
             target_joints[name] = angle
             if 'LHipYawPitch' in target_joints:
                 target_joints['RHipYawPitch'] = target_joints['LHipYawPitch']
-
-
-
-
         return target_joints
 
 
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBellyToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
